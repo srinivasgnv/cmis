@@ -1,0 +1,87 @@
+**Access FileNet Repository Resources via CMIS Browser Binding URLs**
+
+Background of CMIS was covered in my earlier blog post https://www.linkedin.com/pulse/seamlessly-accessing-on-premise-enterprise-content-from-gannavarapu/
+
+It is important to know how to access documents and folders of an Enterprise Repository via CMIS. The repository that is covered in this article is IBM FileNet ECM repository and it is supported by IBM FileNet CMIS server implementation. 
+
+IBM CMIS supports 3 types of bindings, AtomPub (XML Based), Web services and Browser JSON) binding. The Browser binding is the fastest and most lightweight binding. 
+
+It is possible to access repository resources (like documents and folders) using Http URLs via browser binding and this article covers those aspects. 
+
+The browser binding is designed for web applications and is easy to use just with HTML and JavaScript. It uses just two verbs, GET and POST, and resources are referenced using simple and predictable URLs.
+You reference content in the repository by using the two URLs returned by the following services
+* getRepositories 
+* getRepositoryInfo 
+
+Base URLs
+* Root Folder URL http:/HOST:PORT/openfncmis/browser/<RepositoryID>/root 
+    * Used for content of a folder / document 
+* Repository URL http://HOST:PORT/openfncmis/browser 
+    * Used for content independent to a folder  like query, get type definitions etc., 
+
+Example CMIS Selector services available (Refer CMIS v1.1 Spec)
+* cmisselector=content 
+* cmisselector=object 
+* cmisselector=properties - get document / folder properties 
+* cmisselector=children - Get sub folders / documents within a folder
+* cmisselector=versions - Get object versions
+* cmisselector=query - get a doc by CMIS query
+* And son on...
+
+Example CMIS Actions available (Refer CMIS v1.1 spec)
+* cmisaction=createDocument 
+* cmisaction=createDocumentFromSource
+* cmisaction=query
+* cmisaction=createFolder 
+* And so on...
+
+Referencing Objects (Get operation)
+* By ID : <rootFolderUrl>?objectId=<objectId>
+    * Get Folder content by ID http://HOST:PORT/openfncmis/browser/<RepositoryID>/root?objectId=<Folder Object ID>
+    * Get Document Content by ID http://HOST:PORT/openfncmis/browser/<RepositoryID>/root?objectId=<Document Object ID>
+    * Get Document Properties  http://HOST:PORT/openfncmis/browser/<RepositoryID>/root?objectId=<Document Object ID>&cmisselector=object
+    * Get Document properties http://HOST:PORT/openfncmis/browser/<RepositoryID>/root?objectId=<Document Object ID>&cmisselector=properties&succinct=true
+* By Path : <rootFolderUrl>/<object path>
+    * Get Folder Content By PATH http://HOST:PORT/openfncmis/browser/<RepositoryID>root/<FolderPATHandName>
+    * Get folder children http://HOST:PORT/openfncmis/browser/<RepositoryID>/root/<FolderPATHandName>?cmisselector=children&succinct=true
+    * Get Document Content by PATH http://<HOST:PORT>/openfncmis/browser/<RepositoryID>/root/<DocumentNamewithPath>
+    * Get Versions of a document http://HOST:PORT/openfncmis/browser/<RepositoryID>/root/<DocumentPathandName>?cmisselector=versions&succinct=true
+
+Content that is independent of a folder, for example a Type definition be accessed using the repositoryUrl service.
+<repositoryUrl>?cmisselector=<selector>
+* Query Document by ID http://HOST:PORT/openfncmis/browser/<RepositoryID>?cmisselector=query&statement=SELECT%20%2A%20FROM%20cmis%3Adocument%20where%20cmis%3Aobjectid%3D%27<DocumentObjectID>%27&succinct=true
+
+Creating/Updating/Deleting Content (Post operation ) 
+HTTP POST command to create, update, and delete content from a repository. Use the cmisaction element to control the action.  If  a new document should be created, the value of cmisaction must be
+createDocument. To delete an object, cmisaction must be delete, and so on. The CMIS specification defines a cmisaction value for each operation as well as all other required and optional parameters
+
+The form data must be URL encoded or sent as a multipart message.
+If content is attached to the request, then it must be a multipart request. (Thus, that only applies to the operations createDocument, setContentStream, appendContent-Stream, and checkIn.)
+
+We can send Post request via HTML form or a good tool is Postman.
+
+Create folder example 
+
+cmisaction=createFolder&
+propertyId[0]=cmis%3AobjectTypeId&
+propertyValue[0]=cmis%3Afolder&
+propertyId[1]=cmis%3Aname&
+propertyValue[1]=myFolder&
+succinct=true
+
+
+POST URL 
+http://HOST:PORT/openfncmis/browser/<RepositoryID>/root?cmisaction=createfolder&propertyId[0]=cmis:objectTypeId&propertyValue[0]=cmis:folder&propertyId[1]=cmis:name&propertyValue[1]=FolderName&succinct=true&objectId=<ParentFolderID>
+
+NOTE: POST call Header should have “Content-Type=application/x-www-form-urlencoded” 
+
+Return would be "201 Created “ representing successful execution of the POST call.
+
+
+Create Document Example 
+
+POST URL 
+http://HOST:PORT/openfncmis/browser/<RepositoryID>/root?cmisaction=createdocument&propertyId[0]=cmis:objectTypeId&propertyValue[0]=BaseClassID&propertyId[1]=cmis:name&propertyValue[1]=DocumentName&objectId=<ParentFolderObjectID>&succinct=true
+
+NOTE: POST call Header should have “Content-Type=application/x-www-form-urlencoded” 
+

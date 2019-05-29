@@ -85,3 +85,4 @@ http://HOST:PORT/openfncmis/browser/<RepositoryID>/root?cmisaction=createdocumen
 
 NOTE: POST call Header should have “Content-Type=application/x-www-form-urlencoded” 
 
+With the help of Apache OpenCMIS Workbench it is possible to form POST URLs for update and delete operations as well. Remember to turn on detailed logging and insepct the POST url and then combine with the cmisactions defined in the CMIS spec. 
